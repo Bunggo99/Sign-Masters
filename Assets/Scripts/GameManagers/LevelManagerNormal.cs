@@ -34,13 +34,21 @@ public class LevelManagerNormal : LevelManager
         //ESC Buttons
 
         //tutorial back btn
-        if (Input.GetKeyDown(KeyCode.Escape) && tutorialPopup.activeInHierarchy)
+        if ((Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Return) 
+            || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space)) 
+            && tutorialPopup.activeInHierarchy)
         {
-            tutorialPopup.SetActive(false);
+            DisableTutorialPopup();
             return;
         }
 
         base.Update();
+    }
+
+    public void DisableTutorialPopup()
+    {
+        tutorialPopup.SetActive(false);
+        OnPopupDisabled.Invoke();
     }
 
     #endregion

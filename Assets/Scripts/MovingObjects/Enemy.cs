@@ -19,6 +19,7 @@ public class Enemy : MovingObject
     [SerializeField] private EventNoParam OnEnemyHasMoved;
 
     private Animator animator;
+    private SpriteRenderer spriteRenderer;
     private Transform target;
 
     public static int TotalDamageThisTurn => totalDamageThisTurn;
@@ -34,6 +35,7 @@ public class Enemy : MovingObject
         OnEnemySpawned.Invoke(this);
 
         animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
         target = GameObject.FindGameObjectWithTag("Player").transform;
 
         base.Start();
@@ -54,16 +56,22 @@ public class Enemy : MovingObject
         else
             xDir = target.position.x > transform.position.x ? 1 : -1;
 
+        if (target.position.x != transform.position.x)
+            spriteRenderer.flipX = target.position.x < transform.position.x;
+
         AttemptMove(xDir, yDir);
     }
 
-    public void MoveEnemyHorizontal()
+    private void MoveEnemyHorizontal()
     {
         int xDir = 0;
 
         float distanceInXAxis = Mathf.Abs(target.position.x - transform.position.x);
         if (distanceInXAxis > float.Epsilon)
             xDir = target.position.x > transform.position.x ? 1 : -1;
+
+        if(target.position.x != transform.position.x)
+            spriteRenderer.flipX = target.position.x < transform.position.x;
 
         AttemptMove(xDir, 0);
     }
@@ -74,7 +82,7 @@ public class Enemy : MovingObject
 
     protected override bool OnCantMove(Transform hitTransform)
     {
-        Player hitPlayer = hitTransform.GetComponent<Player>();
+        hitTransform.TryGetComponent(out Player hitPlayer);
 
         if (hitPlayer)
         {

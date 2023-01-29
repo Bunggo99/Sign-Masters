@@ -42,9 +42,9 @@ public class SignLanguageDisplay : MonoBehaviour
                             + "</color>" + word[correctNum..];
         wordText.text = coloredWord;
 
-#if !UNITY_EDITOR
+//#if !UNITY_EDITOR
         wordText.gameObject.SetActive(false);
-#endif
+//#endif
 
         string coloredSignText = string.Empty;
         for (int i = 0; i < word.Length; i++)

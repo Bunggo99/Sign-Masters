@@ -68,7 +68,7 @@ public class Alphabet : MovingObject
 
     protected override bool OnCantMove(Transform hitTransform)
     {
-        Alphabet hitAlphabet = hitTransform.GetComponent<Alphabet>();
+        hitTransform.TryGetComponent(out Alphabet hitAlphabet);
         if (hitAlphabet != null)
         {
             Vector3 direction = hitTransform.position - transform.position;

@@ -25,6 +25,7 @@ public abstract class LevelManager : SingletonManager<LevelManager>
     [SerializeField] private EventNoParam OnLevelResumed;
     [SerializeField] private EventNoParam OnLevelPaused;
     [SerializeField] protected EventNoParam OnGameEnded;
+    [SerializeField] protected EventNoParam OnPopupDisabled;
 
     [SerializeField] protected LevelInfo levelInfo;
 
@@ -53,6 +54,7 @@ public abstract class LevelManager : SingletonManager<LevelManager>
         if (Input.GetKeyDown(KeyCode.Escape) && dictionaryPopup.activeInHierarchy)
         {
             dictionaryPopup.SetActive(false);
+            OnPopupDisabled.Invoke();
         }
         //Resume
         else if (Input.GetKeyDown(KeyCode.Escape) && pauseScreen.activeInHierarchy)
@@ -113,7 +115,7 @@ public abstract class LevelManager : SingletonManager<LevelManager>
     private IEnumerator LevelTransition()
     {
         levelTransitionPanel.SetActive(true);
-        yield return null;
+        yield return new WaitForEndOfFrame();
         OnLevelSetupStarted.Invoke();
 
         yield return new WaitForSeconds(levelStartDelay);
@@ -130,12 +132,3 @@ public abstract class LevelManager : SingletonManager<LevelManager>
 
     #endregion
 }
-
-//death blinking anim (done)
-//alphabet shrinking/expanding anim (done)
-//lock levels that is not yet unlocked (done)
-//high score for endless mode (done)
-//pause screen (done)
-//in a level, press esc to pause/resume (done)
-//in any menu, press esc to back to prev menu (done)
-//in the main menu, press esc twice to exit (done)

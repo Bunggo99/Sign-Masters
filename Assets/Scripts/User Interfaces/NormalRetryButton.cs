@@ -11,6 +11,15 @@ public class NormalRetryButton : MonoBehaviour
 
     #region Functions
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            RetryLevel();
+            enabled = false;
+        }
+    }
+
     public void RetryLevel()
     {
         LevelInfo.SetStageAndSave(levelInfo.StageNumber);

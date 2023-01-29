@@ -10,6 +10,8 @@ public class DictionaryUI : MonoBehaviour
     [SerializeField] protected GameObject prevBtn;
     [SerializeField] protected GameObject nextBtn;
     [SerializeField] protected LevelInfo levelInfo;
+    [SerializeField] private EventNoParam OnPopupEnabled;
+    [SerializeField] private EventNoParam OnPopupDisabled;
 
     protected int page = 1;
     protected int Page
@@ -77,5 +79,10 @@ public class DictionaryUI : MonoBehaviour
     public void ToggleDictionaryPanel()
     {
         dictionaryPanel.SetActive(!dictionaryPanel.activeSelf);
+        
+        if (dictionaryPanel.activeInHierarchy)
+            OnPopupEnabled.Invoke();
+        else 
+            OnPopupDisabled.Invoke();
     }
 }

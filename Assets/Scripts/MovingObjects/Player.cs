@@ -12,6 +12,7 @@ public class Player : MovingObject
         MovementButtonIsAlreadyPressed,
         IsNotPlayerTurn,
         IsLevelTransition,
+        IsPopupActive,
         IsLevelPaused
     }
 
@@ -32,11 +33,11 @@ public class Player : MovingObject
 
     [SerializeField] protected TextMeshProUGUI turnText;
     [SerializeField] private LayerMask interactableLayer;
-    [SerializeField] private EventNoParam OnWrongLetter;
     [SerializeField] private int wrongLetterDamage = 4;
     [SerializeField] private int foodAdditionPerLevel = 50;
     [SerializeField] protected LevelInfo levelInfo;
 
+    [SerializeField] private EventNoParam OnWrongLetter;
     [SerializeField] private EventObject OnPlayerSpawned;
     [SerializeField] private EventNoParam OnLevelClearEndless;
     [SerializeField] private EventNoParam OnGameOver;
@@ -47,10 +48,13 @@ public class Player : MovingObject
     [SerializeField] private EventNoParam OnEnemyTurn;
     [SerializeField] private EventNoParam OnPlayerTurn;
     [SerializeField] private EventNoParam OnDecreasePlayerTurn;
+    [SerializeField] private EventNoParam OnPopupEnabled;
+    [SerializeField] private EventNoParam OnPopupDisabled;
     [SerializeField] private EventObject OnDecreasePlayerTurnAfterHittingEnemy;
 
     private readonly HashSet<DisableMovementReason> movementDisablers = new();
     private Animator animator = null;
+    private SpriteRenderer spriteRenderer = null;
     private FoodDisplay foodDisplay = null;
     private int food = 0;
     private bool foodCollided = false;
@@ -66,6 +70,7 @@ public class Player : MovingObject
     protected override void Start()
     {
         animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
 
         if (PlayerPrefs.HasKey(FOOD_KEY))
         {
@@ -105,6 +110,11 @@ public class Player : MovingObject
         OnPlayerTurn.AddListener(PlayerTurnStarted);
         OnLevelResumed.AddListener(LevelResumed);
         OnLevelPaused.AddListener(LevelPaused);
+        OnPopupDisabled.AddListener(PopupDisabled);
+        OnPopupEnabled.AddListener(PopupEnabled);
+
+        movementDisablers.Add(DisableMovementReason.IsLevelTransition);
+        movementDisablers.Add(DisableMovementReason.IsPopupActive);
     }
 
     private void OnDisable()
@@ -116,6 +126,8 @@ public class Player : MovingObject
         OnPlayerTurn.RemoveListener(PlayerTurnStarted);
         OnLevelResumed.RemoveListener(LevelResumed);
         OnLevelPaused.RemoveListener(LevelPaused);
+        OnPopupDisabled.RemoveListener(PopupDisabled);
+        OnPopupEnabled.RemoveListener(PopupEnabled);
     }
 
     #endregion
@@ -147,6 +159,10 @@ public class Player : MovingObject
         if (horizontal != 0 || vertical != 0)
         {
             movementDisablers.Add(DisableMovementReason.MovementButtonIsAlreadyPressed);
+
+            if(horizontal != 0)
+                spriteRenderer.flipX = horizontal < 0;
+            
             AttemptMove(horizontal, vertical);
         }
     }
@@ -190,6 +206,15 @@ public class Player : MovingObject
     private void PlayerTurnStarted()
     {
         movementDisablers.Remove(DisableMovementReason.IsNotPlayerTurn);
+    }
+
+    private void PopupEnabled()
+    {
+        movementDisablers.Add(DisableMovementReason.IsPopupActive);
+    }
+    private void PopupDisabled()
+    {
+        movementDisablers.Remove(DisableMovementReason.IsPopupActive);
     }
 
     #endregion
@@ -261,7 +286,7 @@ public class Player : MovingObject
 
     protected override bool OnCantMove(Transform hitTransform)
     {
-        Wall hitWall = hitTransform.GetComponent<Wall>();
+        hitTransform.TryGetComponent(out Wall hitWall);
         if (hitWall != null)
         {
             hitWall.DamageWall(wallDamage);
@@ -272,8 +297,8 @@ public class Player : MovingObject
             OnDecreasePlayerTurn.Invoke();
         }
 
-        Enemy hitEnemy = hitTransform.GetComponent<Enemy>();
-        if(hitEnemy != null)
+        hitTransform.TryGetComponent(out Enemy hitEnemy);
+        if (hitEnemy != null)
         {
             SoundManager.instance.PlaySingle(collideWithEnemy);
             hitEnemy.PlayEnemyAttackAnim();
@@ -286,7 +311,7 @@ public class Player : MovingObject
                 Enemy.ResetTotalDamageThisTurn();
         }
 
-        Alphabet hitAlphabet = hitTransform.GetComponent<Alphabet>();
+        hitTransform.TryGetComponent(out Alphabet hitAlphabet);
         if (hitAlphabet != null)
         {
             Vector3 direction = hitTransform.position - transform.position;

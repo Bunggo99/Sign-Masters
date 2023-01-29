@@ -21,6 +21,7 @@ public class BoardLayout : MonoBehaviour
 
     public void SetupBoard(int columns, int rows)
     {
+        //var randFloorColor = Random.ColorHSV(0.125f, 0.6f, 0, 0.75f, 0.75f, 1f);
         Transform boardHolder = new GameObject("Board").transform;
 
         for (int x = -1; x <= columns; x++)
@@ -31,6 +32,11 @@ public class BoardLayout : MonoBehaviour
 
                 if (x == -1 || y == -1 || y == rows || x == columns)
                     toInstantiate = GetOuterWall(x, y, columns, rows);
+                //else
+                //{
+                //    var spriteRenderer = toInstantiate.GetComponent<SpriteRenderer>();
+                //    spriteRenderer.color = randFloorColor;
+                //}
 
                 Instantiate(toInstantiate, new Vector3(x, y, 0f), Quaternion.identity, boardHolder);
             }
