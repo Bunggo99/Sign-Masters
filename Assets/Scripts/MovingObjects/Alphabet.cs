@@ -94,7 +94,7 @@ public class Alphabet : MovingObject
 
     protected override void OnMoveStarted(Vector3 endPos) { }
 
-    protected override void OnMoveEnded()
+    protected override void OnMoveEnded(Vector3 endPos)
     {
         CheckBlockingOverlap();
     }

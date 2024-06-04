@@ -22,16 +22,19 @@ public class EventNoParam : ScriptableObject
         GameEvent -= action;
     }
 
-    public bool Invoke()
+    public void Invoke()
     {
         GameEvent?.Invoke();
-
-        return GameEvent != null;
     }
 
     public void ClearListeners()
     {
         GameEvent = null;
+    }
+
+    internal void AddListener(EventNoParam onComputerVisionSceneLoaded)
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

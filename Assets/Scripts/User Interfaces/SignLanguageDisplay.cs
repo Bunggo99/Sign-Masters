@@ -43,7 +43,7 @@ public class SignLanguageDisplay : MonoBehaviour
         wordText.text = coloredWord;
 
 //#if !UNITY_EDITOR
-        wordText.gameObject.SetActive(false);
+        //wordText.gameObject.SetActive(false);
 //#endif
 
         string coloredSignText = string.Empty;

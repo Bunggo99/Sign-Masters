@@ -12,7 +12,7 @@ public class StageLayout3 : LevelLayout
 
     #region Layout Objects Implementation
 
-    //alphabet, player, exit, food/drink, and obstacles
+    //alphabet, enemy, player, exit, food/drink, and obstacles
     public override void LayoutObjects(BoardManager board)
     {
         base.LayoutObjects(board);
@@ -20,6 +20,9 @@ public class StageLayout3 : LevelLayout
         LayoutTilesAtRandom(prefabs.WallTiles, wallCount.Min, wallCount.Max);
         LayoutTilesAtRandom(prefabs.FoodTiles, foodCount.Min, foodCount.Max);
         LayoutAlphabetAtRandom(prefabs.AlphabetTile);
+
+        int enemyCount = (int)Mathf.Log(levelInfo.StageNumber, enemyLogIncrease);
+        LayoutTilesAtRandom(prefabs.EnemyTiles, enemyCount, enemyCount);
 
         GameObject exitObj = LayoutExitAtRandomOuterPos(prefabs.Exit);
         LayoutPlayerAcrossExit(prefabs.Player, exitObj.transform);

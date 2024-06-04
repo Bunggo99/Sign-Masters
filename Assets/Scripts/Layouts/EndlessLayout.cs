@@ -6,10 +6,8 @@ public class EndlessLayout : LevelLayout
 
     [SerializeField] private RangedNum<int> wallCount = new(5, 8);
     [SerializeField] private RangedNum<int> foodCount = new(1, 4);
-    [SerializeField] private int maxEnemyCount = 3;
-    [SerializeField] private int enemyLogIncrease = 2;
+    [SerializeField] protected int maxEnemyCount = 4;
     [SerializeField] private TilePrefabs prefabs;
-    [SerializeField] private LevelInfo levelInfo;
 
     #endregion
 

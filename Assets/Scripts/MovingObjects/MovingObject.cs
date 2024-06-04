@@ -70,7 +70,7 @@ public abstract class MovingObject : MonoBehaviour
         }
 
         transform.position = endPos;
-        OnMoveEnded();
+        OnMoveEnded(endPos);
         isMoving = false;
     }
 
@@ -80,7 +80,7 @@ public abstract class MovingObject : MonoBehaviour
 
     protected abstract bool OnCantMove(Transform hitTransform);
     protected abstract void OnMoveStarted(Vector3 endPos);
-    protected abstract void OnMoveEnded();
+    protected abstract void OnMoveEnded(Vector3 endPos);
 
     #endregion
 }

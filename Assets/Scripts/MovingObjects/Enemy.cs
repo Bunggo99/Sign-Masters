@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Enemy : MovingObject
 {
@@ -13,10 +14,15 @@ public class Enemy : MovingObject
     [SerializeField] private float attackDelay = 0.5f;
     [SerializeField] private AudioClip enemyAttack1;
     [SerializeField] private AudioClip enemyAttack2;
+    [SerializeField] private GameObject textCanvas;
 
     [SerializeField] private EventObject OnEnemySpawned;
     [SerializeField] private EventObject OnEnemyDeleted;
     [SerializeField] private EventNoParam OnEnemyHasMoved;
+    [SerializeField] private EventNoParam OnComputerVisionSceneLoading;
+    [SerializeField] private EventObject OnEnemyInteracted;
+    [SerializeField] private EventInt OnEnemyAttacked;
+    [SerializeField] private EventNoParam OnEnemyKilled;
 
     private Animator animator;
     private SpriteRenderer spriteRenderer;
@@ -27,7 +33,7 @@ public class Enemy : MovingObject
     public float AttackDelay => attackDelay;
 
     #endregion
-    
+
     #region Start
 
     protected override void Start()
@@ -70,7 +76,7 @@ public class Enemy : MovingObject
         if (distanceInXAxis > float.Epsilon)
             xDir = target.position.x > transform.position.x ? 1 : -1;
 
-        if(target.position.x != transform.position.x)
+        if (target.position.x != transform.position.x)
             spriteRenderer.flipX = target.position.x < transform.position.x;
 
         AttemptMove(xDir, 0);
@@ -86,15 +92,7 @@ public class Enemy : MovingObject
 
         if (hitPlayer)
         {
-            SoundManager.instance.RandomizeSfx(enemyAttack1, enemyAttack2);
-
-            totalDamageThisTurn += damage;
-
-            hitPlayer.DecreaseFood(damage, totalDamageThisTurn);
-
-            PlayEnemyAttackAnim();
-
-            Invoke(nameof(EnemyHasMovedCallback), attackDelay);
+            DamagePlayer(hitPlayer);
         }
         else
         {
@@ -107,13 +105,26 @@ public class Enemy : MovingObject
         return true;
     }
 
+    private void DamagePlayer(Player hitPlayer)
+    {
+        SoundManager.instance.RandomizeSfx(enemyAttack1, enemyAttack2);
+
+        totalDamageThisTurn += damage;
+
+        hitPlayer.DecreaseFood(damage, totalDamageThisTurn);
+
+        PlayEnemyAttackAnim();
+
+        Invoke(nameof(EnemyHasMovedCallback), attackDelay);
+    }
+
     #endregion
 
     #region On Move Callbacks
 
     protected override void OnMoveStarted(Vector3 endPos) { }
 
-    protected override void OnMoveEnded()
+    protected override void OnMoveEnded(Vector3 endPos)
     {
         CheckEnemyOverlap();
 
@@ -143,7 +154,7 @@ public class Enemy : MovingObject
         for (int i = 0; i < enemyStackingList.Count; i++)
         {
             Enemy enemy = enemyStackingList[i];
-            if(Vector2.Distance(currEnemy.transform.position, 
+            if (Vector2.Distance(currEnemy.transform.position,
                 enemy.transform.position) < Mathf.Epsilon)
             {
                 existsSamePos = true;
@@ -184,11 +195,38 @@ public class Enemy : MovingObject
 
     #endregion
 
-    #region Play Anim
+    #region Public Methods
 
     public void PlayEnemyAttackAnim()
     {
         animator.SetTrigger("enemyAttack");
+    }
+
+    public void SetActiveCanvas(bool enabled)
+    {
+        textCanvas.SetActive(enabled);
+    }
+
+    public void LoadComputerVisionScene()
+    {
+        OnComputerVisionSceneLoading.Invoke();
+        OnEnemyInteracted.Invoke(this);
+        SceneManager.LoadSceneAsync("ComputerVision", LoadSceneMode.Additive);
+    }
+
+    public void EnemyBattled(bool success)
+    {
+        if (success)
+        {
+            Destroy(gameObject);
+            OnEnemyKilled.Invoke();
+        }
+        else
+        {
+            SoundManager.instance.RandomizeSfx(enemyAttack1, enemyAttack2);
+            animator.SetTrigger("enemyAttack");
+            OnEnemyAttacked.Invoke(damage);
+        }
     }
 
     #endregion
