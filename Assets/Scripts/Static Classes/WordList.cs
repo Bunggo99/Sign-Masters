@@ -28,6 +28,12 @@ public static class WordList
         return word;
     }
 
+    public static char RandomizeCharacter(char currLetter)
+    {
+        char randchara = (char)Random.Range('A', currLetter + 1);
+        return randchara;
+    }
+
     #endregion
 
     #region Word Array

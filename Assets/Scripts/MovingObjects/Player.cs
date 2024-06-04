@@ -6,7 +6,7 @@ public class Player : MovingObject
 {
     #region Enums
 
-    private enum DisableMovementReason
+    protected enum DisableMovementReason
     {
         IsCurrentlyMoving,
         MovementButtonIsAlreadyPressed,
@@ -25,6 +25,7 @@ public class Player : MovingObject
     [SerializeField] private int startingFood = 200;
     [SerializeField] private int wallDamage = 1;
     [SerializeField] private float moveSfxVolume = 0.3f;
+    [SerializeField] private float movementPressedDelay = 0.2f;
 
     [SerializeField] private AudioClip moveSound1;
     [SerializeField] private AudioClip moveSound2;
@@ -51,8 +52,10 @@ public class Player : MovingObject
     [SerializeField] private EventNoParam OnPopupEnabled;
     [SerializeField] private EventNoParam OnPopupDisabled;
     [SerializeField] private EventObject OnDecreasePlayerTurnAfterHittingEnemy;
+    [SerializeField] private EventInt OnEnemyAttacked;
+    [SerializeField] private EventNoParam OnEnemyKilled;
 
-    private readonly HashSet<DisableMovementReason> movementDisablers = new();
+    protected HashSet<DisableMovementReason> movementDisablers = new();
     private Animator animator = null;
     private SpriteRenderer spriteRenderer = null;
     private FoodDisplay foodDisplay = null;
@@ -62,6 +65,7 @@ public class Player : MovingObject
 
     private bool MovementDisabled => movementDisablers.Count > 0;
     public TextMeshProUGUI TurnText => turnText;
+    private Enemy engagedEnemy;
 
     #endregion
 
@@ -87,6 +91,8 @@ public class Player : MovingObject
         AddFoodPerLevel();
 
         base.Start();
+
+        turnText.gameObject.SetActive(false);
     }
 
     protected virtual void AddFoodPerLevel()
@@ -101,7 +107,7 @@ public class Player : MovingObject
 
     #region Enable/Disable
 
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
         OnWrongLetter.AddListener(DecreaseFoodOnWrongLetter);
         OnLevelSetupStarted.AddListener(LevelSetupStateEnabled);
@@ -112,9 +118,10 @@ public class Player : MovingObject
         OnLevelPaused.AddListener(LevelPaused);
         OnPopupDisabled.AddListener(PopupDisabled);
         OnPopupEnabled.AddListener(PopupEnabled);
+        OnEnemyAttacked.AddListener(DecreaseFood);
+        OnEnemyKilled.AddListener(EnemyKilled);
 
         movementDisablers.Add(DisableMovementReason.IsLevelTransition);
-        movementDisablers.Add(DisableMovementReason.IsPopupActive);
     }
 
     private void OnDisable()
@@ -128,6 +135,8 @@ public class Player : MovingObject
         OnLevelPaused.RemoveListener(LevelPaused);
         OnPopupDisabled.RemoveListener(PopupDisabled);
         OnPopupEnabled.RemoveListener(PopupEnabled);
+        OnEnemyAttacked.RemoveListener(DecreaseFood);
+        OnEnemyKilled.RemoveListener(EnemyKilled);
     }
 
     #endregion
@@ -138,7 +147,9 @@ public class Player : MovingObject
     {
         PlayerMovement();
 
-        CheckMovementButton();
+        //CheckMovementButton();
+
+        CheckInteractInput();
     }
 
     private void PlayerMovement()
@@ -151,6 +162,7 @@ public class Player : MovingObject
         if (horizontal != 0 && vertical != 0)
         {
             movementDisablers.Add(DisableMovementReason.MovementButtonIsAlreadyPressed);
+            Invoke(nameof(RemoveMovementButtonIsAlreadyPressed), movementPressedDelay);
 
             vertical = 0;
             horizontal = 0;
@@ -159,22 +171,37 @@ public class Player : MovingObject
         if (horizontal != 0 || vertical != 0)
         {
             movementDisablers.Add(DisableMovementReason.MovementButtonIsAlreadyPressed);
+            Invoke(nameof(RemoveMovementButtonIsAlreadyPressed), movementPressedDelay);
 
-            if(horizontal != 0)
+            if (horizontal != 0)
                 spriteRenderer.flipX = horizontal < 0;
-            
+
             AttemptMove(horizontal, vertical);
         }
     }
 
-    private void CheckMovementButton()
+    private void RemoveMovementButtonIsAlreadyPressed()
     {
-        var HorizontalPressed = Input.GetButton("Horizontal");
-        var VerticalPressed = Input.GetButton("Vertical");
-        
-        if (!HorizontalPressed && !VerticalPressed &&
-            movementDisablers.Contains(DisableMovementReason.MovementButtonIsAlreadyPressed))
+        if (movementDisablers.Contains(DisableMovementReason.MovementButtonIsAlreadyPressed))
             movementDisablers.Remove(DisableMovementReason.MovementButtonIsAlreadyPressed);
+    }
+
+    //private void CheckMovementButton()
+    //{
+    //    var HorizontalPressed = Input.GetButton("Horizontal");
+    //    var VerticalPressed = Input.GetButton("Vertical");
+
+    //    if (!HorizontalPressed && !VerticalPressed &&
+    //        movementDisablers.Contains(DisableMovementReason.MovementButtonIsAlreadyPressed))
+    //        movementDisablers.Remove(DisableMovementReason.MovementButtonIsAlreadyPressed);
+    //}
+
+    private void CheckInteractInput()
+    {
+        if (Input.GetKeyDown(KeyCode.E) && engagedEnemy != null)
+        {
+            engagedEnemy.LoadComputerVisionScene();
+        }
     }
 
     #endregion
@@ -229,24 +256,65 @@ public class Player : MovingObject
 
         if (foodCollided)
         {
-            foodCollided = false; 
+            foodCollided = false;
             return;
         }
 
-        if(!gameOver)
+        if (!gameOver)
             SoundManager.instance.RandomizeSfx(moveSfxVolume, moveSound1, moveSound2);
     }
 
-    protected override void OnMoveEnded()
+    protected override void OnMoveEnded(Vector3 endPos)
     {
-        if (Alphabet.AllLettersCorrect && !gameOver)
+        CheckLevelClear(0);
+
+        //OnDecreasePlayerTurn.Invoke();
+        movementDisablers.Remove(DisableMovementReason.IsCurrentlyMoving);
+
+        if (engagedEnemy != null)
         {
-            LevelClear();
-            enabled = false;
+            engagedEnemy.SetActiveCanvas(false);
+            engagedEnemy = null;
         }
 
-        OnDecreasePlayerTurn.Invoke();
-        movementDisablers.Remove(DisableMovementReason.IsCurrentlyMoving);
+        boxCollider.enabled = false;
+        List<RaycastHit2D> hits = new()
+        {
+            Physics2D.Linecast(endPos, endPos + Vector3.right, blockingLayer),
+            Physics2D.Linecast(endPos, endPos + Vector3.left, blockingLayer),
+            Physics2D.Linecast(endPos, endPos + Vector3.up, blockingLayer),
+            Physics2D.Linecast(endPos, endPos + Vector3.down, blockingLayer)
+        };
+        boxCollider.enabled = true;
+
+        foreach (var hit in hits)
+        {
+            if (hit.transform == null) continue;
+
+            hit.transform.TryGetComponent(out Enemy hitEnemy);
+            if (hitEnemy != null)
+            {
+                hitEnemy.SetActiveCanvas(true);
+                engagedEnemy = hitEnemy;
+                break;
+            }
+        }
+    }
+
+    private void CheckLevelClear(int minEnemyAmount)
+    {
+        if (!Alphabet.AllLettersCorrect || gameOver) return;
+
+        var enemyCount = GameObject.FindGameObjectsWithTag("Enemy").Length;
+        if (enemyCount > minEnemyAmount) return;
+
+        LevelClear();
+        enabled = false;
+    }
+
+    private void EnemyKilled()
+    {
+        CheckLevelClear(1);
     }
 
     #endregion
@@ -300,15 +368,15 @@ public class Player : MovingObject
         hitTransform.TryGetComponent(out Enemy hitEnemy);
         if (hitEnemy != null)
         {
-            SoundManager.instance.PlaySingle(collideWithEnemy);
-            hitEnemy.PlayEnemyAttackAnim();
-            Enemy.AddTotalDamageThisTurn(hitEnemy.Damage);
-            DecreaseFood(hitEnemy.Damage, Enemy.TotalDamageThisTurn);
+            //SoundManager.instance.PlaySingle(collideWithEnemy);
+            //hitEnemy.PlayEnemyAttackAnim();
+            //Enemy.AddTotalDamageThisTurn(hitEnemy.Damage);
+            //DecreaseFood(hitEnemy.Damage, Enemy.TotalDamageThisTurn);
 
-            bool turnExist = OnDecreasePlayerTurnAfterHittingEnemy.Invoke(hitEnemy);
+            //bool turnExist = OnDecreasePlayerTurnAfterHittingEnemy.Invoke(hitEnemy);
 
-            if (!turnExist)
-                Enemy.ResetTotalDamageThisTurn();
+            //if (!turnExist)
+            //Enemy.ResetTotalDamageThisTurn();
         }
 
         hitTransform.TryGetComponent(out Alphabet hitAlphabet);
@@ -317,7 +385,7 @@ public class Player : MovingObject
             Vector3 direction = hitTransform.position - transform.position;
             bool canPush = hitAlphabet.AttemptMoveTile((int)direction.x, (int)direction.y);
 
-            if(canPush) StartCoroutine(SmoothMovement(transform.position + direction));
+            if (canPush) StartCoroutine(SmoothMovement(transform.position + direction));
         }
 
         return true;
@@ -343,6 +411,15 @@ public class Player : MovingObject
         food -= damage;
         food = Mathf.Max(0, food);
         foodDisplay.UpdateTextWithDecrement(totalDamage, food);
+        CheckGameOver();
+    }
+
+    private void DecreaseFood(int damage)
+    {
+        animator.SetTrigger("playerHit");
+        food -= damage;
+        food = Mathf.Max(0, food);
+        foodDisplay.UpdateTextWithDecrement(damage, food);
         CheckGameOver();
     }
 

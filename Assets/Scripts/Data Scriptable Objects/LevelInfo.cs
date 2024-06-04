@@ -7,6 +7,7 @@ public class LevelInfo : ScriptableObject
 
     [SerializeField] private int stageNumber;
     [SerializeField] private int maxStageNumber;
+    public bool isEndless;
 
     private int startStageNumber;
 

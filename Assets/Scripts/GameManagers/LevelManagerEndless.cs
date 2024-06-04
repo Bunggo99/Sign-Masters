@@ -17,12 +17,14 @@ public class LevelManagerEndless : LevelManager
         base.OnEnable();
 
         OnLevelClearEndless.AddListener(NextLevel);
+        levelInfo.isEndless = true;
     }
 
     protected override void OnDisable()
     {
         base.OnDisable();
 
+        levelInfo.isEndless = false;
         OnLevelClearEndless.RemoveListener(NextLevel);
     }
 

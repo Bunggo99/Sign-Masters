@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class LevelCamera : MonoBehaviour
@@ -5,6 +6,7 @@ public class LevelCamera : MonoBehaviour
     #region Variables
 
     [SerializeField] private BoardSize size;
+    [SerializeField] private EventBool OnComputerVisionSceneUnloading;
 
     private Camera _cam;
 
@@ -21,12 +23,28 @@ public class LevelCamera : MonoBehaviour
 
     #region Setup Camera Pos And Size
 
+    [ContextMenu("Setup Camera")]
     private void Start()
     {
         SetupPosAndSize(size.Columns, size.Rows);
     }
 
-    private void SetupPosAndSize(int columns, int rows)
+    private void OnEnable()
+    {
+        OnComputerVisionSceneUnloading.AddListener(ComputerVisionSceneUnloading);
+    }
+
+    private void OnDisable()
+    {
+        OnComputerVisionSceneUnloading.RemoveListener(ComputerVisionSceneUnloading);
+    }
+
+    private void ComputerVisionSceneUnloading(bool obj)
+    {
+        Start();
+    }
+
+    public void SetupPosAndSize(int columns, int rows)
     {
         float xPos = (columns - 1) / 2f;
         float yPos = (rows - 1) / 2f;

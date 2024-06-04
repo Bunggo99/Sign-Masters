@@ -4,6 +4,8 @@ public abstract class LevelLayout : MonoBehaviour
 {
     #region Variables
 
+    [SerializeField] protected LevelInfo levelInfo;
+    [SerializeField] protected int enemyLogIncrease = 2;
     private Transform objectHolder;
     private BoardManager boardManager;
 
