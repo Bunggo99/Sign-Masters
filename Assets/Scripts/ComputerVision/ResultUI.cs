@@ -50,7 +50,7 @@ public class ResultUI : MonoBehaviour
 
             resultPicture.texture = liveFeed.material.mainTexture;
 
-            float aspectRatio = (float)liveFeed.material.mainTexture.width / liveFeed.material.mainTexture.height;
+            float aspectRatio = (float)resultPicture.texture.width / resultPicture.texture.height;
             resultPicture.GetComponent<AspectRatioFitter>().aspectRatio = aspectRatio;
         }
     }
@@ -59,14 +59,6 @@ public class ResultUI : MonoBehaviour
     {
         OnComputerVisionSceneUnloading.Invoke(resultSuccess);
         SceneManager.UnloadSceneAsync("ComputerVision");
-        if (resultSuccess)
-        {
-
-        }
-        else
-        {
-
-        }
     }
 
     #endregion

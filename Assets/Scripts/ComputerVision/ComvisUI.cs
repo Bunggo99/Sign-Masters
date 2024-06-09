@@ -11,6 +11,8 @@ public class ComvisUI : MonoBehaviour
     [SerializeField] private LevelInfo levelInfo;
     [SerializeField] private EventBool OnPhotoTaken;
 
+    public static char charQuestion;
+
     #endregion
 
     #region Functions
@@ -19,7 +21,9 @@ public class ComvisUI : MonoBehaviour
     {
         OnPhotoTaken.AddListener(PhotoTaken);
 
-        comvisText.text = $"Demonstrate the letter {GetRandomChar()} to kill enemy";
+        charQuestion = GetCharQuestion();
+
+        comvisText.text = $"Demonstrate the letter {charQuestion} to kill enemy";
     }
 
     private void OnDisable()
@@ -27,12 +31,12 @@ public class ComvisUI : MonoBehaviour
         OnPhotoTaken.RemoveListener(PhotoTaken);
     }
 
-    private char GetRandomChar()
+    private char GetCharQuestion()
     {
         if (!levelInfo.isEndless)
         {
             int currChar = 'A' + (levelInfo.StageNumber - 1);
-            return WordList.RandomizeCharacter((char)currChar);
+            return (char)currChar;
         }
         else
         {
