@@ -3,7 +3,9 @@ using CJM.BarracudaInference.YOLOX;
 using CJM.BBox2DToolkit;
 using CJM.DeepLearningImageProcessor;
 using UnityEngine;
+using UnityEngine.Device;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class ComvisProcessor : MonoBehaviour
 {
@@ -13,6 +15,7 @@ public class ComvisProcessor : MonoBehaviour
     [SerializeField] private EventBool OnPhotoTaken;
     [SerializeField] private MeshRenderer liveFeed;
     [SerializeField] private RawImage resultPicture;
+    [SerializeField] private RectTransform resultUI;
     [SerializeField] private ImageProcessor imageProcessor;
     [SerializeField] private YOLOXObjectDetector modelRunner;
     [SerializeField] private BoundingBox2DVisualizer boundingBoxVisualizer;
@@ -43,6 +46,7 @@ public class ComvisProcessor : MonoBehaviour
 
     private void Update()
     {
+        if (photoButtonClicked) return;
         // Get the source image and dimensions
         var sourceTexture = liveFeed.material.mainTexture;
         if (sourceTexture == null) return;
@@ -75,9 +79,9 @@ public class ComvisProcessor : MonoBehaviour
         if (sourceTexture == null) return;
 
         var sourceDims = new Vector2Int(sourceTexture.width, sourceTexture.height);
-        Debug.Log(sourceTexture.width + " " + sourceTexture.height);
+        //Debug.Log(sourceTexture.width + " " + sourceTexture.height);
         sourceDims = imageProcessor.CalculateInputDims(sourceDims, targetDim);
-        Debug.Log(sourceDims.x + " " + sourceDims.y);
+        //Debug.Log(sourceDims.x + " " + sourceDims.y);
 
         // Calculate input dimensions for model input
         var inputDims = modelRunner.CropInputDims(sourceDims);
@@ -85,18 +89,17 @@ public class ComvisProcessor : MonoBehaviour
         // Prepare and process the input texture
         RenderTexture inputRenderTexture = PrepareRenderTexture(inputDims);
         ProcessInputImage(inputRenderTexture, inputDims, sourceTexture, sourceDims);
-        Debug.Log(inputRenderTexture.width + " " + inputRenderTexture.height);
+        //Debug.Log(inputRenderTexture.width + " " + inputRenderTexture.height);
 
         // Get the model output and process the detected objects
         float[] outputArray = GetModelOutput(inputRenderTexture);
         bboxInfoArray = modelRunner.ProcessOutput(outputArray, confidenceThreshold, nmsThreshold);
-        Debug.Log(bboxInfoArray[0].bbox.x0 + " " + bboxInfoArray[0].bbox.y0);
+        //Debug.Log(bboxInfoArray[0].bbox.x0 + " " + bboxInfoArray[0].bbox.y0);
 
         // Update bounding boxes and user interface
         UpdateBoundingBoxes(inputDims);
-        UpdateBoundingBoxes2(inputDims);
-        Debug.Log(bboxInfoArray[0].bbox.x0 + " " + bboxInfoArray[0].bbox.y0);
         boundingBoxVisualizer.UpdateBoundingBoxVisualizations(bboxInfoArray, photoButtonClicked);
+        boundingBoxVisualizer.UpdateBoundingBoxPos(bboxInfoArray, resultPicture, resultUI);
 
         resultSuccessfull = false;
         for (int i = 0; i < bboxInfoArray.Length; i++)
@@ -163,12 +166,6 @@ public class ComvisProcessor : MonoBehaviour
         {
             bboxInfoArray[i].bbox = BBox2DUtility.ScaleBoundingBox(bboxInfoArray[i].bbox, inputDims, screenDims, offset, true);
         }
-    }
-
-    private void UpdateBoundingBoxes2(Vector2Int inputDims)
-    {
-        Debug.Log(resultPicture.rectTransform.rect.width);
-        Debug.Log(resultPicture.rectTransform.rect.height);
     }
 
     #endregion
