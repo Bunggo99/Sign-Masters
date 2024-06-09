@@ -33,26 +33,25 @@ public class ResultUI : MonoBehaviour
 
     private void PhotoTaken(bool success)
     {
-        if (takingPhoto)
+        if (!takingPhoto) return;
+
+        takingPhoto = false;
+        resultPanel.SetActive(true);
+
+        resultSuccess = success;
+        if (success)
         {
-            takingPhoto = false;
-            resultPanel.SetActive(true);
-
-            resultSuccess = success;
-            if (success)
-            {
-                resultText.text = "You got it right!\nYou killed the Enemy!";
-            }
-            else
-            {
-                resultText.text = "Sorry, you got it wrong :(\nYou got damaged by the enemy...";
-            }
-
-            resultPicture.texture = liveFeed.material.mainTexture;
-
-            float aspectRatio = (float)resultPicture.texture.width / resultPicture.texture.height;
-            resultPicture.GetComponent<AspectRatioFitter>().aspectRatio = aspectRatio;
+            resultText.text = "You got it right!\nYou killed the Enemy!";
         }
+        else
+        {
+            resultText.text = "Sorry, you got it wrong :(\nYou got damaged by the enemy...";
+        }
+
+        resultPicture.texture = liveFeed.material.mainTexture;
+
+        float aspectRatio = (float)resultPicture.texture.width / resultPicture.texture.height;
+        resultPicture.GetComponent<AspectRatioFitter>().aspectRatio = aspectRatio;
     }
 
     public void CloseButtonClicked()

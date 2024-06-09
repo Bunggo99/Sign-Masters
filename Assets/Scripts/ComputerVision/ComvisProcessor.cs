@@ -1,11 +1,10 @@
 using System;
+using System.Collections;
 using CJM.BarracudaInference.YOLOX;
 using CJM.BBox2DToolkit;
 using CJM.DeepLearningImageProcessor;
 using UnityEngine;
-using UnityEngine.Device;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 public class ComvisProcessor : MonoBehaviour
 {
@@ -14,7 +13,8 @@ public class ComvisProcessor : MonoBehaviour
     [SerializeField] private EventNoParam OnPhotoButtonClicked;
     [SerializeField] private EventBool OnPhotoTaken;
     [SerializeField] private MeshRenderer liveFeed;
-    [SerializeField] private RawImage resultPicture;
+    [SerializeField] private AspectRatioFitter resultPictureAspect;
+    [SerializeField] private RectTransform pictureParent;
     [SerializeField] private RectTransform resultUI;
     [SerializeField] private ImageProcessor imageProcessor;
     [SerializeField] private YOLOXObjectDetector modelRunner;
@@ -99,7 +99,6 @@ public class ComvisProcessor : MonoBehaviour
         // Update bounding boxes and user interface
         UpdateBoundingBoxes(inputDims);
         boundingBoxVisualizer.UpdateBoundingBoxVisualizations(bboxInfoArray, photoButtonClicked);
-        boundingBoxVisualizer.UpdateBoundingBoxPos(bboxInfoArray, resultPicture, resultUI);
 
         resultSuccessfull = false;
         for (int i = 0; i < bboxInfoArray.Length; i++)
@@ -110,6 +109,21 @@ public class ComvisProcessor : MonoBehaviour
         }
 
         OnPhotoTaken.Invoke(resultSuccessfull);
+
+        StartCoroutine(UpdateBB());
+    }
+
+    private IEnumerator UpdateBB()
+    {
+        yield return null;
+        yield return null;
+
+        var pictureSizeY = pictureParent.sizeDelta.y;
+        var pictureSizeX = pictureParent.rect.height * resultPictureAspect.aspectRatio;
+
+        var pictureSize = new Vector2(pictureSizeX, pictureSizeY);
+
+        boundingBoxVisualizer.UpdateBoundingBoxPos(bboxInfoArray, pictureSize, resultUI);
     }
 
     private RenderTexture PrepareRenderTexture(Vector2Int dims)
