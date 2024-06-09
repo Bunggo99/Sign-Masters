@@ -24,6 +24,8 @@ public class MainMenu : MonoBehaviour
         if (!PlayerPrefs.HasKey(UNLOCKED_STAGES_KEY))
             PlayerPrefs.SetInt(UNLOCKED_STAGES_KEY, 1);
 
+        PlayerPrefs.SetInt(UNLOCKED_STAGES_KEY, 26);
+
         Time.timeScale = 1;
         SoundManager.instance.StartMusic();
     }
