@@ -5,6 +5,7 @@ using CJM.BBox2DToolkit;
 using CJM.DeepLearningImageProcessor;
 using UnityEngine;
 using UnityEngine.UI;
+using BoundingBox2DVisualizer = Bunggo99.BoundingBox2DVisualizer;
 
 public class ComvisProcessor : MonoBehaviour
 {
