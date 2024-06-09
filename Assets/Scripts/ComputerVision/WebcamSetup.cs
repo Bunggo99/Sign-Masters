@@ -16,7 +16,7 @@ public class WebcamSetup : MonoBehaviour
     private void Start()
     {
         webcamDevices = WebCamTexture.devices;
-        currentWebcam = webcamDevices[0].name;
+        currentWebcam = webcamDevices.Length > 0 ? webcamDevices[0].name : "";
 
         SetupWebcam();
         StartCoroutine(UpdateScreenTextureAsync());

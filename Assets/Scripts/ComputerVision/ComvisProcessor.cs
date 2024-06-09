@@ -1,3 +1,4 @@
+using System;
 using CJM.BarracudaInference.YOLOX;
 using CJM.BBox2DToolkit;
 using CJM.DeepLearningImageProcessor;
@@ -11,6 +12,7 @@ public class ComvisProcessor : MonoBehaviour
     [SerializeField] private EventNoParam OnPhotoButtonClicked;
     [SerializeField] private EventBool OnPhotoTaken;
     [SerializeField] private MeshRenderer liveFeed;
+    [SerializeField] private RawImage resultPicture;
     [SerializeField] private ImageProcessor imageProcessor;
     [SerializeField] private YOLOXObjectDetector modelRunner;
     [SerializeField] private BoundingBox2DVisualizer boundingBoxVisualizer;
@@ -92,6 +94,7 @@ public class ComvisProcessor : MonoBehaviour
 
         // Update bounding boxes and user interface
         UpdateBoundingBoxes(inputDims);
+        UpdateBoundingBoxes2(inputDims);
         Debug.Log(bboxInfoArray[0].bbox.x0 + " " + bboxInfoArray[0].bbox.y0);
         boundingBoxVisualizer.UpdateBoundingBoxVisualizations(bboxInfoArray, photoButtonClicked);
 
@@ -160,6 +163,12 @@ public class ComvisProcessor : MonoBehaviour
         {
             bboxInfoArray[i].bbox = BBox2DUtility.ScaleBoundingBox(bboxInfoArray[i].bbox, inputDims, screenDims, offset, true);
         }
+    }
+
+    private void UpdateBoundingBoxes2(Vector2Int inputDims)
+    {
+        Debug.Log(resultPicture.rectTransform.rect.width);
+        Debug.Log(resultPicture.rectTransform.rect.height);
     }
 
     #endregion
